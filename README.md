@@ -1,138 +1,276 @@
-# 🎓 Semantic Scholar MCP Server
+# Semantic Scholar MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@JackKuo666/semanticscholar-mcp-server)](https://smithery.ai/server/@JackKuo666/semanticscholar-mcp-server)
+An unofficial, community-maintained [Model Context Protocol](https://modelcontextprotocol.io/) server for the public [Semantic Scholar APIs](https://api.semanticscholar.org/api-docs/).
 
-This project implements a Model Context Protocol (MCP) server for interacting with the Semantic Scholar API. It provides tools for searching papers, retrieving paper and author details, and fetching citations and references.
+It exposes the Academic Graph, Recommendations, and Datasets APIs to MCP clients over stdio. Version 2.0.0 provides 20 endpoint-aligned tools plus two backward-compatible tools.
 
-## ✨ Features
+> [!IMPORTANT]
+> This project is not affiliated with or endorsed by Semantic Scholar or the Allen Institute for AI. API availability, terms, and rate limits are controlled by Semantic Scholar.
 
-- 🔍 Search for papers on Semantic Scholar
-- 📄 Retrieve detailed information about specific papers
-- 👤 Get author details
-- 🔗 Fetch citations and references for a paper
+## Highlights
 
-## 📋 Prerequisites
+- **Broad API coverage:** authors, papers, citations, references, full-text snippets, recommendations, and dataset releases.
+- **No Semantic Scholar SDK dependency:** the server uses a small asynchronous `httpx` client and depends only on `mcp` and `httpx`.
+- **Native responses:** endpoint-aligned tools preserve Semantic Scholar's JSON response shape instead of converting it into a reduced local model.
+- **Explicit pagination:** callers control offsets or continuation tokens; the server never silently crawls an unbounded result set.
+- **Rate-limit aware:** HTTP 429 and transient 5xx responses use `Retry-After` when available and bounded exponential backoff otherwise.
+- **Installable distribution:** run from source or install the release ZIP as a Python package with the `semanticscholar-mcp` console entry point.
+- **Offline tests:** the test suite uses an in-memory HTTP transport and does not consume Semantic Scholar API quota.
 
-- 🐍 Python 3.10+
-- 📚 `semanticscholar` Python package
-- 🔧 `mcp` Python package (Model Context Protocol)
+## Requirements
 
-## 🚀 Installation
-### Installing via Smithery
+- Python 3.10 or later
+- An MCP client that supports stdio servers
+- Optional: a [Semantic Scholar API key](https://www.semanticscholar.org/product/api) for a dedicated rate limit
 
-To install semanticscholar Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@JackKuo666/semanticscholar-mcp-server):
+Anonymous requests work for many endpoints, but they use a heavily shared rate limit.
 
-#### claude
+## Quick start
 
-```sh
-npx -y @smithery/cli@latest install @JackKuo666/semanticscholar-mcp-server --client claude --config "{}"
+### Install a release ZIP
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install ./semanticscholar-mcp-server-2.0.0.zip
 ```
 
-#### Cursor
+Start the installed stdio server:
 
-Paste the following into Settings → Cursor Settings → MCP → Add new server: 
-- Mac/Linux  
-```s
-npx -y @smithery/cli@latest run @JackKuo666/semanticscholar-mcp-server --client cursor --config "{}" 
-```
-#### Windsurf
-```sh
-npx -y @smithery/cli@latest install @JackKuo666/semanticscholar-mcp-server --client windsurf --config "{}"
-```
-### CLine
-```sh
-npx -y @smithery/cli@latest install @JackKuo666/semanticscholar-mcp-server --client cline --config "{}"
+```bash
+semanticscholar-mcp
 ```
 
+### Install from a source checkout
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/JackKuo666/semanticscholar-MCP-Server.git
-   cd semanticscholar-mcp-server
-   ```
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+```
 
-2. Install the required packages:
-   ```
-   pip install semanticscholar mcp
-   ```
+You can then use the console entry point above or run the module directly:
 
-## 🖥️ Usage
+```bash
+python semantic_scholar_server.py
+```
 
-1. Start the Semantic Scholar MCP server:
-   ```
-   python semantic_scholar_server.py
-   ```
+On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`.
 
-2. The server will start and listen for MCP requests.
+## MCP client configuration
 
-3. Use an MCP client to interact with the server and access the following tools:
-
-   - 🔍 `search_semantic_scholar`: Search for papers using a query string
-   - 📄 `get_semantic_scholar_paper_details`: Get details of a specific paper
-   - 👤 `get_semantic_scholar_author_details`: Get details of a specific author
-   - 🔗 `get_semantic_scholar_citations_and_references`: Get citations and references for a paper
-
-## Usage with Claude Desktop
-
-Add this configuration to your `claude_desktop_config.json`:
-
-(Mac OS)
+After installing the package, configure your MCP client with the absolute path to the virtual environment's console script:
 
 ```json
 {
   "mcpServers": {
     "semanticscholar": {
-      "command": "python",
-      "args": ["-m", "semanticscholar_mcp_server"]
+      "command": "/absolute/path/to/.venv/bin/semanticscholar-mcp",
+      "env": {
+        "SEMANTIC_SCHOLAR_API_KEY": "your-optional-api-key"
       }
-  }
-}
-```
-
-(Windows version):
-
-```json
-{
-  "mcpServers": {
-    "semanticscholar": {
-      "command": "C:\\Users\\YOUR\\PATH\\miniconda3\\envs\\mcp_server\\python.exe",
-      "args": [
-        "D:\\code\\YOUR\\PATH\\semanticscholar-MCP-Server\\semanticscholar_server.py"
-      ],
-      "env": {},
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
-}
-```
-Using with Cline
-```json
-{
-  "mcpServers": {
-    "semanticscholar": {
-      "command": "bash",
-      "args": [
-        "-c",
-        "source /home/YOUR/PATH/.venv/bin/activate && python /home/YOUR/PATH/semanticscholar_mcp_server.py"
-      ],
-      "env": {},
-      "disabled": false,
-      "autoApprove": []
     }
   }
 }
 ```
 
-## 📁 File Structure
+For a source checkout without package installation:
 
-- 📜 `semantic_scholar_search.py`: Contains functions for interacting with the Semantic Scholar API
-- 🖥️ `semantic_scholar_server.py`: Implements the MCP server and defines the available tools
+```json
+{
+  "mcpServers": {
+    "semanticscholar": {
+      "command": "/absolute/path/to/.venv/bin/python",
+      "args": ["/absolute/path/to/semantic_scholar_server.py"],
+      "env": {
+        "SEMANTIC_SCHOLAR_API_KEY": "your-optional-api-key"
+      }
+    }
+  }
+}
+```
 
-## 🤝 Contributing
+Do not commit an API key to an MCP configuration stored in a public repository. Prefer your client's secret or environment-variable mechanism when available.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Example requests
 
-## 📄 License
+Once the server is connected, an MCP-capable assistant can handle requests such as:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- “Find recent open-access papers about retrieval-augmented generation.”
+- “Resolve this DOI and return its references with citation contexts.”
+- “Recommend papers similar to these two papers but unlike this negative example.”
+- “Search full-text snippets for evidence about calibration in scientific QA.”
+- “List the datasets in the latest Semantic Scholar dataset release.”
+
+The exact natural-language workflow depends on the MCP client. The server itself exposes typed tools rather than a chat interface.
+
+## Configuration
+
+| Environment variable | Default | Description |
+|---|---:|---|
+| `SEMANTIC_SCHOLAR_API_KEY` | unset | Sent to Semantic Scholar as the `x-api-key` header. |
+| `SEMANTIC_SCHOLAR_TIMEOUT` | `30` | Request timeout in seconds. |
+| `SEMANTIC_SCHOLAR_MAX_RETRIES` | `3` | Retries for HTTP 429 and transient 5xx responses. |
+| `SEMANTIC_SCHOLAR_API_URL` | `https://api.semanticscholar.org` | API origin override, primarily for tests and compatible proxies. |
+
+> [!CAUTION]
+> When `SEMANTIC_SCHOLAR_API_URL` is overridden, the API key is sent to that origin. Only use an endpoint you trust.
+
+## Tool catalog
+
+### Academic Graph API
+
+| MCP tool | REST operation |
+|---|---|
+| `batch_get_semantic_scholar_authors` | `POST /graph/v1/author/batch` |
+| `search_semantic_scholar_authors` | `GET /graph/v1/author/search` |
+| `get_semantic_scholar_author_details` | `GET /graph/v1/author/{author_id}` |
+| `get_semantic_scholar_author_papers` | `GET /graph/v1/author/{author_id}/papers` |
+| `autocomplete_semantic_scholar_papers` | `GET /graph/v1/paper/autocomplete` |
+| `batch_get_semantic_scholar_papers` | `POST /graph/v1/paper/batch` |
+| `search_semantic_scholar_papers` | `GET /graph/v1/paper/search` |
+| `bulk_search_semantic_scholar_papers` | `GET /graph/v1/paper/search/bulk` |
+| `match_semantic_scholar_paper` | `GET /graph/v1/paper/search/match` |
+| `get_semantic_scholar_paper_details` | `GET /graph/v1/paper/{paper_id}` |
+| `get_semantic_scholar_paper_authors` | `GET /graph/v1/paper/{paper_id}/authors` |
+| `get_semantic_scholar_paper_citations` | `GET /graph/v1/paper/{paper_id}/citations` |
+| `get_semantic_scholar_paper_references` | `GET /graph/v1/paper/{paper_id}/references` |
+| `search_semantic_scholar_snippets` | `GET /graph/v1/snippet/search` |
+
+Paper search exposes publication type, open-access, minimum citation count, publication date/year, venue, and field-of-study filters. Bulk search uses token pagination and supports sorting. Citation and reference tools can request citation contexts, intents, context/intent pairs, and influential-citation status.
+
+### Recommendations API
+
+| MCP tool | REST operation |
+|---|---|
+| `recommend_semantic_scholar_papers_for_paper` | `GET /recommendations/v1/papers/forpaper/{paper_id}` |
+| `recommend_semantic_scholar_papers` | `POST /recommendations/v1/papers/` |
+
+Single-paper recommendations support the `recent` and `all-cs` pools. Multi-paper recommendations accept positive and optional negative paper IDs. The API returns at most 500 recommendations per request.
+
+### Datasets API
+
+| MCP tool | REST operation |
+|---|---|
+| `list_semantic_scholar_dataset_releases` | `GET /datasets/v1/release/` |
+| `get_semantic_scholar_dataset_release` | `GET /datasets/v1/release/{release_id}` |
+| `get_semantic_scholar_dataset_download_links` | `GET /datasets/v1/release/{release_id}/dataset/{dataset_name}` |
+| `get_semantic_scholar_dataset_diffs` | `GET /datasets/v1/diffs/{start}/to/{end}/{dataset_name}` |
+
+Dataset tools return release metadata and temporary download URLs. They do not automatically download multi-gigabyte datasets. The identifier `latest` is accepted wherever the upstream API supports it.
+
+### Backward-compatible tools
+
+Two tool names are retained for clients built against the original project:
+
+| MCP tool | Behavior |
+|---|---|
+| `search_semantic_scholar` | Returns only the paper result list from the first relevance-search request. |
+| `get_semantic_scholar_citations_and_references` | Returns the first page of both relationships. |
+
+New integrations should use the endpoint-aligned search, citation, and reference tools because they expose filters, fields, and independent pagination.
+
+## Paper identifiers and response fields
+
+Paper tools accept identifiers supported by Semantic Scholar, including:
+
+- Semantic Scholar paper ID
+- `CorpusId:`
+- `DOI:`
+- `ARXIV:`
+- `ACL:`
+- `MAG:`
+- `PMID:` and `PMCID:`
+- supported Semantic Scholar paper URLs
+
+Most tools accept a `fields` list. Useful paper fields include `abstract`, `authors`, `externalIds`, `openAccessPdf`, `tldr`, `journal`, `citationStyles`, `s2FieldsOfStudy`, and `embedding`.
+
+Default field sets are intentionally rich but exclude the large embedding vector. Request it explicitly when needed:
+
+```json
+{
+  "paper_id": "ARXIV:2005.11401",
+  "fields": ["paperId", "title", "embedding"]
+}
+```
+
+## Pagination, retries, and errors
+
+- Offset-paginated tools return only the requested page.
+- Bulk paper search returns the upstream continuation token; pass it back to request the next page.
+- The server honors `Retry-After` for throttled responses and otherwise uses bounded exponential backoff.
+- Validation, upstream HTTP, and unexpected transport failures are returned as `{"error": "..."}` so one failed request does not terminate the MCP server.
+- A successful empty result is returned unchanged and is not converted into an error.
+
+Semantic Scholar can change limits or schemas independently of this project. Consult the official API documentation when an upstream validation rule differs from the server's current defaults.
+
+## Security and data handling
+
+- Queries, identifiers, filters, and requested fields are sent to the configured Semantic Scholar API origin.
+- The API key is used only as the `x-api-key` request header.
+- The server does not persist API responses, maintain a paper database, or automatically download dataset files.
+- Avoid placing secrets in prompts, search queries, logs, issues, or public MCP configuration files.
+- Dataset download URLs can be temporary and should be treated accordingly.
+
+If you discover a security issue, do not publish credentials or exploit details in a public issue. Use the repository owner's private security-reporting channel; if none is listed, open a minimal issue requesting private contact without disclosing the vulnerability.
+
+## Development
+
+Create a development environment and install the project in editable mode:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+```
+
+Run the complete test suite:
+
+```bash
+python -m unittest discover -v
+```
+
+The tests use `httpx.MockTransport`; they do not call the live Semantic Scholar API or consume rate-limit quota.
+
+### Project layout
+
+```text
+semantic_scholar_api.py       Async HTTP client, validation, retries, and API paths
+semantic_scholar_server.py    FastMCP server and 22 registered tools
+tests/                        Offline API and tool-registration tests
+pyproject.toml                Package metadata and console entry point
+requirements.txt              Minimal runtime dependencies
+```
+
+### Contribution guidelines
+
+Contributions are welcome. A change should:
+
+1. Preserve the upstream JSON response shape for endpoint-aligned tools.
+2. Keep pagination explicit and bounded.
+3. Add or update offline tests for endpoint paths, parameters, payloads, and tool registration.
+4. Avoid adding a heavyweight API SDK when the direct client can support the operation clearly.
+5. Never include API keys, generated bytecode, virtual environments, or large downloaded datasets.
+6. Run `python -m unittest discover -v` before opening a pull request.
+
+For new upstream endpoints, update the client method, MCP tool, tool-registration test, and this catalog together.
+
+## API references
+
+- [Academic Graph API](https://api.semanticscholar.org/api-docs/graph)
+- [Recommendations API](https://api.semanticscholar.org/api-docs/recommendations)
+- [Datasets API](https://api.semanticscholar.org/api-docs/datasets)
+- [Semantic Scholar API overview](https://www.semanticscholar.org/product/api)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+
+## Project lineage
+
+Version 2 is a substantial rewrite and expansion of [JackKuo666/semanticscholar-MCP-Server](https://github.com/JackKuo666/semanticscholar-MCP-Server). It replaces the original SDK-backed runtime with a direct asynchronous API client, expands coverage from four tools to 22, preserves native responses, and adds pagination, retry handling, tests, and packaging.
+
+The two original high-level tool names listed under backward compatibility remain available so existing clients can migrate gradually. Repository history and this attribution are retained in recognition of the original work.
+
+## License
+
+Distributed under the [MIT License](LICENSE).
+
+“Semantic Scholar” is used only to identify compatibility with the public service. This project does not claim ownership of the Semantic Scholar name, API, data, or trademarks.

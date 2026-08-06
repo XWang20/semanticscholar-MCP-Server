@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semanticscholar-mcp-server"
+version = "2.0.0"
+description = "MCP server for the public Semantic Scholar Academic Graph, Recommendations, and Datasets APIs"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Xing Wang", email = "43691322+XWang20@users.noreply.github.com" },
+]
+maintainers = [
+  { name = "Xing Wang", email = "43691322+XWang20@users.noreply.github.com" },
+]
+dependencies = [
+  "httpx>=0.27.0,<1.0.0",
+  "mcp>=1.28.1,<2.0.0",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[project.urls]
+Homepage = "https://github.com/XWang20/semanticscholar-MCP-Server"
+Repository = "https://github.com/XWang20/semanticscholar-MCP-Server.git"
+Issues = "https://github.com/XWang20/semanticscholar-MCP-Server/issues"
+Upstream = "https://github.com/JackKuo666/semanticscholar-MCP-Server"
+"Semantic Scholar API" = "https://api.semanticscholar.org/api-docs/"
+
+[project.scripts]
+semanticscholar-mcp = "semantic_scholar_server:main"
+
+[tool.setuptools]
+py-modules = [
+  "semantic_scholar_api",
+  "semantic_scholar_server",
+]
