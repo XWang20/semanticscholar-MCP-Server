@@ -1,6 +1,6 @@
 ---
 name: scholarqa-research
-description: Perform evidence-first scholarly research, multi-paper synthesis, and Scideator-style facet-based research ideation with Semantic Scholar MCP tools. Use when Codex must answer a research question from academic literature, produce a cited literature review, compare findings, verify scholarly claims, generate research ideas from seed papers by recombining purpose/mechanism/evaluation facets, assess an idea against related literature, or revise a potentially unoriginal idea through controlled facet swaps. Do not use for general web research or a simple single-paper metadata lookup that needs only one direct tool call.
+description: Perform evidence-first scholarly research, multi-paper synthesis, and Scideator-style facet-based research ideation with the ScholarQA CLI or Semantic Scholar MCP tools. Use when Codex must answer a research question from academic literature, produce a cited literature review, compare findings, verify scholarly claims, generate research ideas from seed papers by recombining purpose/mechanism/evaluation facets, assess an idea against related literature, or revise a potentially unoriginal idea through controlled facet swaps. Do not use for general web research or a simple single-paper metadata lookup that needs only one direct tool call.
 ---
 
 # ScholarQA Research
@@ -9,13 +9,13 @@ description: Perform evidence-first scholarly research, multi-paper synthesis, a
 
 Produce a concise, evidence-grounded answer before writing a broad narrative. Retrieve scholarly evidence with Semantic Scholar, map each material claim to verified papers, expose disagreements and evidence limits, and never invent citations.
 
-For literature questions, treat this as an MCP-native adaptation of the ScholarQA workflow, not as a wrapper around or behavioral replica of `ai2-scholarqa-lib`. For research ideation, preserve Scideator's shared faceted representation and human-directed loop; do not reduce it to generic brainstorming.
+For literature questions, treat this as a Semantic Scholar MCP/CLI adaptation of the ScholarQA workflow, not as a wrapper around or behavioral replica of `ai2-scholarqa-lib`. For research ideation, preserve Scideator's shared faceted representation and human-directed loop; do not reduce it to generic brainstorming.
 
 ## Provenance boundary
 
 Read [references/provenance.md](references/provenance.md) before modifying or redistributing this skill, and whenever the user asks how its workflow was derived.
 
-- Treat this skill as an independent MCP-native adaptation, not an official Ai2 Scholar QA release or an Allen Institute for AI product.
+- Treat this skill as an independent Semantic Scholar MCP/CLI adaptation, not an official Ai2 Scholar QA release or an Allen Institute for AI product.
 - Credit the Ai2 Scholar QA paper and official `allenai/ai2-scholarqa-lib` repository when describing the evidence-QA design. No upstream ScholarQA code is bundled or imported.
 - Credit the Scideator paper for the facet-ideation workflow and published prompt pseudocode. Keep published specifications distinct from adapter decisions.
 - Do not add these methodology citations mechanically to ordinary literature answers; cite the papers that support the user's requested claims. Include methodology citations when discussing, comparing, publishing, or redistributing the workflow itself.
@@ -28,6 +28,16 @@ Read [references/provenance.md](references/provenance.md) before modifying or re
 - **Hybrid:** Use Evidence QA to establish the literature first, then enter Facet ideation. Keep evidence claims and generated proposals visibly separate.
 
 The Scideator references distinguish the final paper's published specification from MCP/runtime adaptations. Never present an adapter choice as part of the original system.
+
+## Choose a transport
+
+This skill is independently usable with either runtime below. Do not require the endpoint-routing skill merely to run an evidence-QA workflow.
+
+- **ScholarQA CLI:** Prefer `scholarqa-cli collect` for repeatable multi-query evidence bundles and `scholarqa-cli verify` for final citation records. The CLI collects and verifies evidence; it deliberately does not generate answer prose. Apply this skill's ledger and synthesis rules to its JSON output.
+- **Semantic Scholar MCP:** Call snippet search, paper search, graph expansion, and batch verification tools directly when MCP is connected.
+- **Optional low-level composition:** Use the separate `$semantic-scholar-cli` skill with `semanticscholar-cli` when exact endpoint selection, citation traversal, recommendations, datasets, or a shell-only fallback is needed. It complements this skill but is not a prerequisite.
+
+Do not run duplicate MCP and CLI searches by default. Select one primary transport, then switch or augment only to fill a documented evidence gap.
 
 ## Select depth
 
@@ -55,7 +65,9 @@ Write an internal search plan containing:
 
 ### 2. Retrieve complementary evidence
 
-Use the Semantic Scholar MCP server as the primary academic source.
+Use Semantic Scholar as the primary academic source through one selected transport.
+
+With the ScholarQA CLI, run `scholarqa-cli collect QUESTION` with 1-6 distinct `--query` formulations and relevant filters. Preserve the returned bundle, inspect `operation_errors`, and use `candidate_paper_ids` only as a screening set. With MCP, execute the equivalent sequence directly:
 
 1. Search full-text snippets for passages that directly address each subquestion.
 2. Run relevance-ranked paper searches to recover abstracts and papers missed by snippet search.
@@ -83,10 +95,12 @@ Create an internal claim ledger for every conclusion that may appear in the answ
 
 Distinguish:
 
-- full-text passage evidence;
-- abstract-level evidence;
-- metadata-only context;
-- inference made by synthesis rather than stated by a source.
+- **Tier A:** a retrieved full-text passage directly supports or contradicts the claim;
+- **Tier B:** the abstract directly supports or contradicts the claim;
+- **Tier C:** metadata establishes publication identity or context only;
+- **Tier D:** a relationship inferred from titles, graph edges, or recommendations, which cannot support a substantive claim alone.
+
+A snippet result is not automatically Tier A. Assign Tier A only when its source is identifiable as full text; if provenance is ambiguous, use Tier B only when the same support is present in the abstract, otherwise do not use it as substantive evidence.
 
 If the available text does not support a claim, omit or qualify it. Preserve meaningful disagreement instead of forcing consensus.
 
@@ -98,9 +112,11 @@ Keep recommendations separate from reported findings. Mark recommendations as in
 
 ### 6. Verify citations
 
-Before finalizing, batch-fetch the records for every cited paper and verify title, first author or author list, year, and stable identifier. Remove any citation that cannot be resolved or does not support the nearby claim.
+Before finalizing, batch-fetch the records for every cited paper and verify title, first author or author list, year, and stable identifier. Use `scholarqa-cli verify PAPER_ID...` (or `--ids-file`) with the CLI transport, or `batch_get_semantic_scholar_papers` with MCP. With the CLI, inspect `unresolved_ids` and each item's `resolved` value; remove unresolved citations.
 
-Check both MCP error channels: tool-level errors and an `error` field embedded in an otherwise successful result. Retry rate-limited requests conservatively and reduce concurrency.
+Bibliographic verification does not prove that a paper supports the nearby claim. Recheck that relationship against the claim ledger, and remove a citation that does not support the prose even when its metadata resolves correctly.
+
+With MCP, check both error channels: tool-level errors and an `error` field embedded in an otherwise successful result. With the CLI, inspect the process status plus `operation_errors` or a top-level `error`. Retry rate-limited requests conservatively and reduce concurrency.
 
 ### 7. Report transparently
 
@@ -113,4 +129,4 @@ Never describe a search as exhaustive or systematic unless the executed protocol
 - If Semantic Scholar returns too little evidence, broaden terminology once, inspect citation neighbors, and report the remaining gap.
 - If snippet search is unavailable, fall back to paper abstracts and explicitly label the result as abstract-level synthesis.
 - If metadata conflict across records, prefer DOI/arXiv-resolved canonical records and disclose unresolved conflicts.
-- If the Semantic Scholar MCP server is unavailable, explain that the ScholarQA workflow cannot be completed faithfully and ask before switching to a generic web-only approach.
+- If the selected Semantic Scholar transport is unavailable, try the other installed transport. If neither MCP nor `scholarqa-cli` is available, explain that the workflow cannot be completed faithfully and ask before switching to a generic web-only approach.

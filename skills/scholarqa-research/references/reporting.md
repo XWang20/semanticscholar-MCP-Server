@@ -11,7 +11,7 @@ Build this ledger before drafting prose. It may remain internal unless the user 
 | `claim` | One bounded statement, not a paragraph-sized conclusion. |
 | `paper_id` | Canonical Semantic Scholar paper ID and stable DOI/arXiv ID when available. |
 | `evidence` | Exact retrieved passage or a faithful abstract excerpt/summary. |
-| `evidence_tier` | A, B, C, or D as defined in `retrieval.md`. |
+| `evidence_tier` | A, B, C, or D as defined in the main skill and `retrieval.md`. |
 | `relationship` | Supports, contradicts, qualifies, or contextualizes. |
 | `study_context` | Population, dataset, method, comparison, and outcome when available. |
 | `confidence` | High, medium, or low, with a short reason. |

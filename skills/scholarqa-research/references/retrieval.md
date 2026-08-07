@@ -2,6 +2,28 @@
 
 Use this reference for deep or multi-stage searches. Tool prefixes may vary by client; select tools by operation name.
 
+## Transport selection
+
+Use one primary transport for a run:
+
+- `scholarqa-cli collect` packages complementary snippet and paper searches into one auditable JSON bundle. It is the shortest shell path for Evidence QA.
+- `scholarqa-cli verify` batch-resolves the papers selected for final citation.
+- Semantic Scholar MCP exposes the same underlying academic source as direct typed tools and is preferable when the agent already has MCP access or needs interactive graph expansion.
+- `semanticscholar-cli` exposes all endpoint-aligned operations in a shell. The separate `semantic-scholar-cli` skill helps choose them, but neither is required when `scholarqa-cli` covers the task.
+
+Example CLI retrieval and verification:
+
+```bash
+scholarqa-cli collect "Does retrieval-augmented generation reduce factual errors?" \
+  --query "retrieval augmented generation factuality evaluation" \
+  --query "RAG hallucination benchmark" \
+  --year "2020-" > evidence.json
+
+scholarqa-cli verify S2_PAPER_ID DOI:10.0000/example > verified.json
+```
+
+Treat a `collect` exit status of `1` as a partial bundle: retain usable results and inspect `operation_errors`. For `verify`, status `1` also covers unresolved IDs; remove or replace those citations. Status `2` is an input or local execution error. The CLI output is evidence input, not a finished answer.
+
 ## Endpoint selection
 
 | Need | Preferred operation | Notes |

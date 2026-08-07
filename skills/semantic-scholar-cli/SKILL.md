@@ -11,6 +11,8 @@ Choose the narrowest correct Semantic Scholar operation, inspect its live schema
 
 The CLI and MCP server share the same 22 FastMCP tool definitions. Treat `tools` and `schema` output as authoritative when this skill and the installed version differ.
 
+This is the low-level endpoint-routing skill. For evidence-led multi-paper answers, the separate `$scholarqa-research` skill can use `scholarqa-cli` or MCP and may be installed independently. Combine the two only when a ScholarQA run also needs precise graph traversal or another endpoint-level operation.
+
 ## Workflow
 
 1. Confirm `semanticscholar-cli` is available. If working from this repository before installation, use `python semantic_scholar_cli.py` instead.

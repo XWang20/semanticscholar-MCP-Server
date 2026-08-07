@@ -4,7 +4,7 @@ This repository contains independent adaptations and documentation informed by t
 
 ## Ai2 Scholar QA
 
-The `scholarqa-research` skill's evidence-synthesis workflow is an independent MCP-native adaptation informed by:
+The `scholarqa-cli` workflow and `scholarqa-research` skill are an independent Semantic Scholar MCP/CLI adaptation informed by:
 
 - Singh, Amanpreet; Chang, Joseph Chee; Haddad, Dany; Naik, Aakanksha; Hwang, Jena D.; Kinney, Rodney; Weld, Daniel S.; Downey, Doug; and Feldman, Sergey. **Ai2 Scholar QA: Organized Literature Synthesis with Attribution.** ACL 2025 System Demonstrations, pages 513–523. [DOI 10.18653/v1/2025.acl-demo.49](https://doi.org/10.18653/v1/2025.acl-demo.49), [ACL Anthology](https://aclanthology.org/2025.acl-demo.49/), [arXiv:2504.10861](https://arxiv.org/abs/2504.10861). The paper is available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - Official repository: [allenai/ai2-scholarqa-lib](https://github.com/allenai/ai2-scholarqa-lib), licensed under [Apache License 2.0](https://github.com/allenai/ai2-scholarqa-lib/blob/a96232870bdb0bd763f0131320e8377c6deb575e/LICENSE). Provenance was reviewed against [commit `a962328`](https://github.com/allenai/ai2-scholarqa-lib/tree/a96232870bdb0bd763f0131320e8377c6deb575e).
