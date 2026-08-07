@@ -41,6 +41,43 @@ Anonymous requests work for many endpoints, but they use a heavily shared rate l
 
 ## Quick start
 
+### Ask Codex or Claude Code to install it
+
+Send the following entire message to your coding agent rather than only its first line. It deliberately requires the agent to ask which form you want before changing your environment:
+
+```text
+Install this Semantic Scholar MCP / skill / CLI for me:
+https://github.com/XWang20/semanticscholar-MCP-Server
+
+Before making any changes, first ask me which form I want:
+1. MCP server
+2. CLI
+3. semantic-scholar-cli skill
+4. a combination of the above
+
+Do not choose for me and do not begin installation until I answer. After I answer,
+detect whether you are running in Codex or Claude Code, follow the repository README,
+ask whether the installation should be project-local or global when relevant, and verify
+the selected components without exposing or committing an API key.
+```
+
+中文版本：
+
+```text
+为我安装这个 Semantic Scholar MCP / skill / CLI：
+https://github.com/XWang20/semanticscholar-MCP-Server
+
+开始任何更改之前，先问我要安装哪一种形式：
+1. MCP server
+2. CLI
+3. semantic-scholar-cli skill
+4. 上述形式的组合
+
+不要替我选择，也不要在我回答前开始安装。得到确认后，再判断你当前运行在
+Codex 还是 Claude Code 中；按照仓库 README 安装；如果涉及安装范围，再询问
+是项目级还是全局安装；最后验证所选组件，并且不要泄露或提交 API key。
+```
+
 ### Install a release ZIP
 
 ```bash
@@ -109,13 +146,43 @@ CLI exit statuses are designed for agents and scripts:
 
 ## Agent skill
 
-The repository includes a Codex-compatible skill at [`skills/semantic-scholar-cli`](skills/semantic-scholar-cli). It routes scholarly intents to the correct operation and documents identifier, field, filtering, pagination, and evidence-handling conventions.
+The repository includes an Agent Skills-compatible skill at [`skills/semantic-scholar-cli`](skills/semantic-scholar-cli). It routes scholarly intents to the correct operation and documents identifier, field, filtering, pagination, and evidence-handling conventions.
 
-Install the standalone skill ZIP by extracting its top-level folder into your Codex skills directory, or copy the source directory directly:
+### Install with `npx skills`
+
+Install it for the current project; the installer detects supported agents:
 
 ```bash
+npx skills add XWang20/semanticscholar-MCP-Server \
+  --skill semantic-scholar-cli
+```
+
+Or install it globally for a specific agent:
+
+```bash
+# Codex
+npx skills add XWang20/semanticscholar-MCP-Server \
+  --skill semantic-scholar-cli --global --agent codex
+
+# Claude Code
+npx skills add XWang20/semanticscholar-MCP-Server \
+  --skill semantic-scholar-cli --global --agent claude-code
+```
+
+`npx skills` installs the skill instructions only. It does not install the Python package or configure an MCP client. Install the release package as well when the selected workflow needs the `semanticscholar-cli` executable or the `semanticscholar-mcp` server.
+
+### Install the skill manually
+
+Extract the standalone skill ZIP into the appropriate global skills directory, or copy the source directory directly:
+
+```bash
+# Codex
 unzip semantic-scholar-cli-skill-1.0.0.zip -d ~/.codex/skills
-# Or, from a source checkout:
+
+# Claude Code
+unzip semantic-scholar-cli-skill-1.0.0.zip -d ~/.claude/skills
+
+# Or, from a source checkout (Codex example):
 cp -R skills/semantic-scholar-cli ~/.codex/skills/
 ```
 
