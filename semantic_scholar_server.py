@@ -10,7 +10,7 @@ from mcp.server.fastmcp import FastMCP
 from semantic_scholar_api import JSONValue, SemanticScholarAPI, SemanticScholarAPIError
 
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 
 logging.basicConfig(

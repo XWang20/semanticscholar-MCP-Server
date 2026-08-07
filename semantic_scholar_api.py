@@ -97,7 +97,7 @@ class SemanticScholarAPI:
         if self._client is None or self._client.is_closed:
             headers = {
                 "Accept": "application/json",
-                "User-Agent": "semanticscholar-mcp-server/2.1.0",
+                "User-Agent": "semanticscholar-mcp-server/2.2.0",
             }
             if self.api_key:
                 headers["x-api-key"] = self.api_key

@@ -2,7 +2,7 @@
 
 An unofficial, community-maintained [Model Context Protocol](https://modelcontextprotocol.io/) server for the public [Semantic Scholar APIs](https://api.semanticscholar.org/api-docs/).
 
-It exposes the Academic Graph, Recommendations, and Datasets APIs through MCP over stdio and through a schema-driven CLI. Version 2.1.0 provides 20 endpoint-aligned operations plus two backward-compatible operations.
+It exposes the Academic Graph, Recommendations, and Datasets APIs through MCP over stdio and through a schema-driven CLI. Version 2.2.0 provides 20 endpoint-aligned operations, two backward-compatible operations, and two installable agent skills.
 
 > [!IMPORTANT]
 > This project is not affiliated with or endorsed by Semantic Scholar or the Allen Institute for AI. API availability, terms, and rate limits are controlled by Semantic Scholar.
@@ -15,9 +15,9 @@ Raw REST documentation leaves endpoint selection, argument construction, and res
 
 1. **MCP server:** exposes typed tool schemas directly to MCP-capable clients.
 2. **Schema-driven CLI:** lets any shell-based agent list the same operations, inspect their live schemas, and invoke them with validated JSON.
-3. **Agent skill:** encodes intent-to-operation routing so an agent selects `match`, `search`, `snippet`, `citation`, or `recommendation` deliberately instead of guessing.
+3. **Agent skills:** encode both intent-to-operation routing and an attributed, evidence-first workflow for multi-paper synthesis and ideation.
 
-The MCP server and CLI share the same FastMCP tool definitions. The skill tells the agent how to choose among them; `semanticscholar-cli schema` remains the runtime source of truth for accepted arguments.
+The MCP server and CLI share the same FastMCP tool definitions. `semantic-scholar-cli` tells the agent how to choose among them; `scholarqa-research` composes those operations into a cited research workflow. `semanticscholar-cli schema` remains the runtime source of truth for accepted arguments.
 
 ## Highlights
 
@@ -27,7 +27,7 @@ The MCP server and CLI share the same FastMCP tool definitions. The skill tells 
 - **Explicit pagination:** callers control offsets or continuation tokens; the server never silently crawls an unbounded result set.
 - **Rate-limit aware:** HTTP 429 and transient 5xx responses use `Retry-After` when available and bounded exponential backoff otherwise.
 - **One implementation, two transports:** MCP and CLI calls use the same tool names, schemas, validation, and API client.
-- **Agent-ready skill:** the bundled `semantic-scholar-cli` skill provides strict endpoint-routing guidance and discourages legacy or semantically incorrect calls.
+- **Agent-ready skills:** `semantic-scholar-cli` provides strict endpoint routing, while `scholarqa-research` provides attributed, evidence-first literature synthesis and research ideation.
 - **Installable distribution:** the release ZIP installs both `semanticscholar-mcp` and `semanticscholar-cli` console entry points.
 - **Offline tests:** the test suite uses an in-memory HTTP transport and does not consume Semantic Scholar API quota.
 
@@ -52,8 +52,9 @@ https://github.com/XWang20/semanticscholar-MCP-Server
 Before making any changes, first ask me which form I want:
 1. MCP server
 2. CLI
-3. semantic-scholar-cli skill
-4. a combination of the above
+3. semantic-scholar-cli skill (requires the CLI runtime)
+4. scholarqa-research skill (requires the MCP runtime)
+5. a combination of the above
 
 Do not choose for me and do not begin installation until I answer. After I answer,
 detect whether you are running in Codex or Claude Code, follow the repository README,
@@ -70,8 +71,9 @@ https://github.com/XWang20/semanticscholar-MCP-Server
 开始任何更改之前，先问我要安装哪一种形式：
 1. MCP server
 2. CLI
-3. semantic-scholar-cli skill
-4. 上述形式的组合
+3. semantic-scholar-cli skill（需要 CLI runtime）
+4. scholarqa-research skill（需要 MCP runtime）
+5. 上述形式的组合
 
 不要替我选择，也不要在我回答前开始安装。得到确认后，再判断你当前运行在
 Codex 还是 Claude Code 中；按照仓库 README 安装；如果涉及安装范围，再询问
@@ -83,7 +85,7 @@ Codex 还是 Claude Code 中；按照仓库 README 安装；如果涉及安装�
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install ./semanticscholar-mcp-server-2.1.0.zip
+python -m pip install ./semanticscholar-mcp-server-2.2.0.zip
 ```
 
 Start the installed stdio server or inspect the CLI:
@@ -144,32 +146,55 @@ CLI exit statuses are designed for agents and scripts:
 | `2` | Invalid CLI input, schema mismatch, or unknown operation. |
 | `130` | Interrupted by the user. |
 
-## Agent skill
+## Agent skills
 
-The repository includes an Agent Skills-compatible skill at [`skills/semantic-scholar-cli`](skills/semantic-scholar-cli). It routes scholarly intents to the correct operation and documents identifier, field, filtering, pagination, and evidence-handling conventions.
+The repository contains two Agent Skills-compatible skills:
+
+| Skill | Purpose |
+|---|---|
+| [`semantic-scholar-cli`](skills/semantic-scholar-cli) | Select the correct Semantic Scholar operation and call it through the schema-driven CLI. |
+| [`scholarqa-research`](skills/scholarqa-research) | Perform evidence-first multi-paper synthesis, citation verification, and Scideator-style facet ideation. |
+
+`scholarqa-research` is an independent MCP-native adaptation, not the official Ai2 Scholar QA implementation. Its evidence-QA workflow credits the [Ai2 Scholar QA paper](https://doi.org/10.18653/v1/2025.acl-demo.49) and official [`allenai/ai2-scholarqa-lib`](https://github.com/allenai/ai2-scholarqa-lib) repository. Its ideation workflow credits the [Scideator paper](https://doi.org/10.1145/3786335.3813161). See the skill's [provenance reference](skills/scholarqa-research/references/provenance.md) and [third-party notices](THIRD_PARTY_NOTICES.md) for scope, licenses, and adaptation boundaries.
 
 ### Install with `npx skills`
 
-Install it for the current project; the installer detects supported agents:
+List the available skills:
+
+```bash
+npx skills add XWang20/semanticscholar-MCP-Server --list
+```
+
+Install either skill for the current project; the installer detects supported agents:
 
 ```bash
 npx skills add XWang20/semanticscholar-MCP-Server \
   --skill semantic-scholar-cli
+
+npx skills add XWang20/semanticscholar-MCP-Server \
+  --skill scholarqa-research
 ```
 
-Or install it globally for a specific agent:
+Install both together:
+
+```bash
+npx skills add XWang20/semanticscholar-MCP-Server \
+  --skill semantic-scholar-cli --skill scholarqa-research
+```
+
+Or install either skill globally for a specific agent:
 
 ```bash
 # Codex
 npx skills add XWang20/semanticscholar-MCP-Server \
-  --skill semantic-scholar-cli --global --agent codex
+  --skill scholarqa-research --global --agent codex
 
 # Claude Code
 npx skills add XWang20/semanticscholar-MCP-Server \
-  --skill semantic-scholar-cli --global --agent claude-code
+  --skill scholarqa-research --global --agent claude-code
 ```
 
-`npx skills` installs the skill instructions only. It does not install the Python package or configure an MCP client. Install the release package as well when the selected workflow needs the `semanticscholar-cli` executable or the `semanticscholar-mcp` server.
+`npx skills` installs skill instructions only. It does not install the Python package or configure an MCP client. Install the release package as well when `semantic-scholar-cli` needs the CLI executable or `scholarqa-research` needs the MCP server.
 
 ### Install the skill manually
 
@@ -178,21 +203,26 @@ Extract the standalone skill ZIP into the appropriate global skills directory, o
 ```bash
 # Codex
 unzip semantic-scholar-cli-skill-1.0.0.zip -d ~/.codex/skills
+unzip scholarqa-research-1.0.0.zip -d ~/.codex/skills
 
 # Claude Code
 unzip semantic-scholar-cli-skill-1.0.0.zip -d ~/.claude/skills
+unzip scholarqa-research-1.0.0.zip -d ~/.claude/skills
 
-# Or, from a source checkout (Codex example):
+# Or, from a source checkout (Codex examples):
 cp -R skills/semantic-scholar-cli ~/.codex/skills/
+cp -R skills/scholarqa-research ~/.codex/skills/
 ```
 
-Invoke it explicitly with `$semantic-scholar-cli`, for example:
+Invoke a skill explicitly, for example:
 
 ```text
 Use $semantic-scholar-cli to find recent open-access papers about retrieval-augmented generation and verify the final paper records.
+
+Use $scholarqa-research to synthesize the evidence for whether retrieval-augmented generation reduces factual errors, with verified citations and limitations.
 ```
 
-The skill expects `semanticscholar-cli` to be installed. It can use the repository module form, `python semantic_scholar_cli.py`, during local development.
+`semantic-scholar-cli` expects the CLI executable to be installed and can use `python semantic_scholar_cli.py` during local development. `scholarqa-research` expects the Semantic Scholar MCP server to be connected. Install both the selected skill and its runtime dependency.
 
 ## MCP client configuration
 
@@ -231,15 +261,17 @@ Do not commit an API key to an MCP configuration stored in a public repository. 
 
 ## Example requests
 
-Once the MCP server or CLI skill is available, an assistant can handle requests such as:
+Once the MCP server, CLI, or corresponding skills are available, an assistant can handle requests such as:
 
 - “Find recent open-access papers about retrieval-augmented generation.”
 - “Resolve this DOI and return its references with citation contexts.”
 - “Recommend papers similar to these two papers but unlike this negative example.”
 - “Search full-text snippets for evidence about calibration in scientific QA.”
 - “List the datasets in the latest Semantic Scholar dataset release.”
+- “Synthesize the evidence across these papers, cite every material claim, and surface disagreements.”
+- “Generate facet-grounded research ideas from these seed papers, then check novelty against retrieved literature.”
 
-The exact natural-language workflow depends on the agent. MCP exposes typed tools; the CLI exposes the same schemas to shell-based agents; the skill supplies routing policy rather than a second API implementation.
+The exact natural-language workflow depends on the agent. MCP exposes typed tools; the CLI exposes the same schemas to shell-based agents; the skills supply routing and attributed research workflows rather than a second API implementation.
 
 ## Configuration
 
@@ -377,9 +409,11 @@ semantic_scholar_api.py       Async HTTP client, validation, retries, and API pa
 semantic_scholar_cli.py       Schema inspection and JSON command-line dispatch
 semantic_scholar_server.py    FastMCP server and 22 registered tools
 skills/semantic-scholar-cli/  Endpoint-routing skill for shell-based agents
+skills/scholarqa-research/    Attributed evidence synthesis and ideation skill
 tests/                        Offline API, CLI, and tool-registration tests
 pyproject.toml                Package metadata and both console entry points
 requirements.txt              Minimal runtime dependencies
+THIRD_PARTY_NOTICES.md        ScholarQA and Scideator attribution boundaries
 ```
 
 ### Contribution guidelines
@@ -412,5 +446,7 @@ The two original high-level tool names listed under backward compatibility remai
 ## License
 
 Distributed under the [MIT License](LICENSE).
+
+Research workflows and adapted third-party material retain their original attribution and license boundaries as documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In particular, this repository does not relicense or claim authorship of Ai2 Scholar QA or Scideator.
 
 “Semantic Scholar” is used only to identify compatibility with the public service. This project does not claim ownership of the Semantic Scholar name, API, data, or trademarks.

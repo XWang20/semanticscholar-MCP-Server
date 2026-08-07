@@ -1,0 +1,4 @@
+interface:
+  display_name: "ScholarQA Research + Ideation"
+  short_description: "Evidence synthesis and facet-based research ideation"
+  default_prompt: "Use $scholarqa-research to synthesize the literature or develop and check a facet-grounded research idea."

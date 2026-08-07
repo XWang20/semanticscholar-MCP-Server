@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semanticscholar-mcp-server"
-version = "2.1.0"
+version = "2.2.0"
 description = "MCP server and schema-driven CLI for the public Semantic Scholar APIs"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [
   { name = "Xing Wang", email = "43691322+XWang20@users.noreply.github.com" },
 ]
