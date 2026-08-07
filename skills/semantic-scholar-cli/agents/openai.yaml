@@ -1,0 +1,4 @@
+interface:
+  display_name: "Semantic Scholar CLI"
+  short_description: "Route scholarly tasks to the correct CLI operation"
+  default_prompt: "Use $semantic-scholar-cli to retrieve this scholarly information through the correct Semantic Scholar operation."

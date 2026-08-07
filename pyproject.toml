@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "semanticscholar-mcp-server"
-version = "2.0.0"
-description = "MCP server for the public Semantic Scholar Academic Graph, Recommendations, and Datasets APIs"
+version = "2.1.0"
+description = "MCP server and schema-driven CLI for the public Semantic Scholar APIs"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -42,9 +42,11 @@ Upstream = "https://github.com/JackKuo666/semanticscholar-MCP-Server"
 
 [project.scripts]
 semanticscholar-mcp = "semantic_scholar_server:main"
+semanticscholar-cli = "semantic_scholar_cli:main"
 
 [tool.setuptools]
 py-modules = [
   "semantic_scholar_api",
+  "semantic_scholar_cli",
   "semantic_scholar_server",
 ]
